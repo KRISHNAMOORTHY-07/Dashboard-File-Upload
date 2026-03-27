@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyDocHub — Personal Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --accent: #e8ff57;
+    --accent2: #57c8ff;
+    --accent3: #ff6b57;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'Lora', serif;
+    --radius: 12px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 32px 0;
+    position: fixed; top: 0; left: 0;
+    display: flex; flex-direction: column;
+    gap: 0; z-index: 100;
+    transition: transform var(--transition);
+  }
+  .logo {
+    padding: 0 28px 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .logo-mark {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-mark span {
+    background: var(--accent);
+    color: var(--bg);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 14px; font-weight: 800;
+  }
+  .logo-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  .nav-section { padding: 0 16px; margin-bottom: 8px; }
+  .nav-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted); padding: 0 12px 8px; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    font-family: var(--font-head); font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); background: rgba(232,255,87,0.08); border-color: rgba(232,255,87,0.15); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent); color: var(--bg);
+    font-family: var(--font-mono); font-size: 9px; font-weight: 400;
+    padding: 2px 6px; border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 24px 28px;
+    border-top: 1px solid var(--border);
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-head); font-size: 13px; font-weight: 600;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 800; color: var(--bg);
+  }
+  .user-name { color: var(--text); }
+  .user-role { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; padding: 40px 48px; }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 40px;
+  }
+  .page-title {
+    font-family: var(--font-head); font-size: 28px; font-weight: 800;
+    letter-spacing: -1px; color: var(--text);
+  }
+  .page-title span { color: var(--accent); }
+  .topbar-actions { display: flex; gap: 12px; }
+
+  /* BUTTONS */
+  .btn {
+    font-family: var(--font-head); font-size: 12px; font-weight: 700;
+    padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: all var(--transition); letter-spacing: 0.3px;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,255,87,0.3); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .btn-danger { background: rgba(255,107,87,0.1); color: var(--accent3); border: 1px solid rgba(255,107,87,0.2); }
+  .btn-danger:hover { background: rgba(255,107,87,0.2); }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    position: relative; overflow: hidden;
+    transition: all var(--transition); cursor: default;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: linear-gradient(90deg, transparent, var(--accent-c, var(--accent)), transparent);
+  }
+  .stat-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .stat-icon { font-size: 24px; margin-bottom: 16px; }
+  .stat-value { font-family: var(--font-head); font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; }
+  .stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 1.5px; }
+  .stat-delta { font-family: var(--font-mono); font-size: 10px; margin-top: 8px; }
+  .stat-delta.up { color: var(--accent); }
+  .stat-delta.neutral { color: var(--muted); }
+
+  /* SECTIONS */
+  .section { margin-bottom: 40px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--text); }
+  .section-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed rgba(232,255,87,0.25);
+    border-radius: var(--radius); padding: 48px;
+    text-align: center; cursor: pointer;
+    transition: all var(--transition);
+    background: rgba(232,255,87,0.02);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent); background: rgba(232,255,87,0.05);
+  }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 48px; margin-bottom: 16px; }
+  .upload-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .upload-hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .upload-types { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .type-pill {
+    font-family: var(--font-mono); font-size: 10px; padding: 4px 10px;
+    border-radius: 20px; border: 1px solid var(--border); color: var(--muted);
+  }
+
+  /* DOCUMENT GRID */
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .doc-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    cursor: pointer; transition: all var(--transition);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .doc-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.02));
+  }
+  .doc-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+  .doc-card:hover .doc-action { opacity: 1; }
+  .doc-thumb {
+    width: 100%; aspect-ratio: 4/3; border-radius: 6px;
+    display: grid; place-items: center; font-size: 36px;
+    position: relative; overflow: hidden;
+  }
+  .doc-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .doc-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .doc-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 9px; padding: 3px 8px;
+    border-radius: 4px; font-weight: 400;
+  }
+  .doc-action {
+    position: absolute; top: 10px; right: 10px;
+    opacity: 0; transition: opacity var(--transition);
+    display: flex; gap: 4px;
+  }
+  .action-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); display: grid; place-items: center;
+    font-size: 12px; cursor: pointer; transition: all var(--transition);
+  }
+  .action-btn:hover { background: var(--surface2); }
+
+  /* SCENARIOS */
+  .scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .scenario-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    cursor: pointer; transition: all var(--transition);
+    position: relative;
+  }
+  .scenario-card:hover { border-color: rgba(87,200,255,0.3); transform: translateY(-2px); }
+  .scenario-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .scenario-icon { font-size: 28px; }
+  .scenario-status {
+    font-family: var(--font-mono); font-size: 9px; padding: 3px 8px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .status-active { background: rgba(232,255,87,0.1); color: var(--accent); border: 1px solid rgba(232,255,87,0.2); }
+  .status-draft { background: rgba(107,107,128,0.15); color: var(--muted); border: 1px solid var(--border); }
+  .status-running { background: rgba(87,200,255,0.1); color: var(--accent2); border: 1px solid rgba(87,200,255,0.2); }
+  .scenario-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .scenario-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .scenario-docs { display: flex; gap: 4px; margin-top: 16px; flex-wrap: wrap; }
+  .scenario-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .scenario-date { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+
+  /* CREATE SCENARIO FORM */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    z-index: 200; display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--surface); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px; padding: 40px; width: 100%; max-width: 560px;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title { font-family: var(--font-head); font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .modal-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 32px; }
+  .form-group { margin-bottom: 20px; }
+  .form-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; display: block; }
+  .form-input, .form-textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; color: var(--text);
+    font-family: var(--font-body); font-size: 14px;
+    transition: border-color var(--transition); outline: none;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .doc-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .doc-select-item {
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+    cursor: pointer; text-align: center; transition: all var(--transition);
+    font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+  }
+  .doc-select-item:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .doc-select-item.selected { border-color: var(--accent); background: rgba(232,255,87,0.05); color: var(--accent); }
+  .doc-select-item .di { font-size: 20px; margin-bottom: 4px; }
+  .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; }
+
+  /* DOC VIEWER PANEL */
+  .viewer-panel {
+    position: fixed; top: 0; right: -600px; width: 580px; height: 100vh;
+    background: var(--surface); border-left: 1px solid var(--border);
+    z-index: 150; transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column;
+  }
+  .viewer-panel.open { right: 0; }
+  .viewer-header {
+    padding: 24px 28px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .viewer-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+  .viewer-close {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: grid; place-items: center; cursor: pointer; font-size: 16px;
+  }
+  .viewer-body { flex: 1; overflow-y: auto; padding: 28px; }
+  .viewer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .viewer-info {
+    background: var(--surface2); border-radius: 8px; padding: 16px;
+    margin-bottom: 16px;
+  }
+  .viewer-info-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .viewer-info-value { font-family: var(--font-head); font-size: 14px; font-weight: 600; }
+  .viewer-preview {
+    background: var(--surface2); border-radius: 8px; padding: 24px;
+    font-size: 13px; color: var(--muted); line-height: 1.8;
+    min-height: 200px; font-family: var(--font-mono);
+  }
+  .viewer-actions { padding: 24px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+  .pill {
+    font-family: var(--font-mono); font-size: 10px; padding: 4px 10px;
+    border-radius: 4px; border: 1px solid var(--border); color: var(--muted);
+  }
+
+  /* PROGRESS BAR */
+  .upload-progress {
+    background: var(--surface2); border-radius: 4px; height: 4px;
+    overflow: hidden; margin-top: 8px;
+  }
+  .upload-progress-bar {
+    height: 100%; background: var(--accent);
+    border-radius: 4px; transition: width 0.3s ease;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 32px; }
+  .tab {
+    flex: 1; padding: 10px; border-radius: 8px;
+    font-family: var(--font-head); font-size: 12px; font-weight: 700;
+    color: var(--muted); cursor: pointer; transition: all var(--transition);
+    text-align: center; border: none; background: none;
+  }
+  .tab.active { background: var(--surface); color: var(--text); }
+
+  /* SEARCH */
+  .search-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 16px; margin-bottom: 24px;
+  }
+  .search-icon { color: var(--muted); font-size: 14px; }
+  .search-input { background: none; border: none; outline: none; color: var(--text); font-family: var(--font-mono); font-size: 13px; flex: 1; }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 64px 24px; }
+  .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .empty-desc { font-family: var(--font-mono); font-size: 11px; color: var(--muted); opacity: 0.7; }
+
+  /* PAGE VIEWS */
+  .page-view { display: none; }
+  .page-view.active { display: block; animation: fadeIn 0.3s ease; }
+
+  /* NOTIFICATIONS */
+  .toast {
+    position: fixed; bottom: 32px; right: 32px; z-index: 9000;
+    background: var(--surface2); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 16px 20px;
+    font-family: var(--font-head); font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* FILTER ROW */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-chip {
+    font-family: var(--font-mono); font-size: 10px; padding: 6px 12px;
+    border-radius: 20px; border: 1px solid var(--border); color: var(--muted);
+    cursor: pointer; transition: all var(--transition);
+  }
+  .filter-chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .filter-chip.active { background: rgba(232,255,87,0.1); color: var(--accent); border-color: rgba(232,255,87,0.3); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 24px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-mark"><span>M</span> MyDocHub</div>
+    <div class="logo-sub">// personal workspace</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Navigate</div>
+    <div class="nav-item active" onclick="navigate('dashboard', this)">
+      <span class="icon">⬡</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('documents', this)">
+      <span class="icon">◫</span> Documents
+      <span class="nav-badge" id="doc-count-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('scenarios', this)">
+      <span class="icon">◈</span> Scenarios
+      <span class="nav-badge" id="scenario-count-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('upload', this)">
+      <span class="icon">↑</span> Upload
+    </div>
+  </div>
+
+  <div class="nav-section" style="margin-top: 16px;">
+    <div class="nav-label">Categories</div>
+    <div class="nav-item" onclick="filterByCategory('PDF')">
+      <span class="icon">📄</span> PDFs
+    </div>
+    <div class="nav-item" onclick="filterByCategory('Word')">
+      <span class="icon">📝</span> Word Docs
+    </div>
+    <div class="nav-item" onclick="filterByCategory('Image')">
+      <span class="icon">🖼</span> Images
+    </div>
+    <div class="nav-item" onclick="filterByCategory('Other')">
+      <span class="icon">📦</span> Others
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">U</div>
+      <div>
+        <div class="user-name" id="user-name-display">My Workspace</div>
+        <div class="user-role">// personal hub</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-heading">Good morning, <span>let's work</span> ✦</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="openModal('scenario-modal')">+ New Scenario</button>
+      <button class="btn btn-primary" onclick="navigate('upload', document.querySelector('.nav-item:nth-child(4)'))">⬆ Upload Doc</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page-view active" id="page-dashboard">
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--accent-c: var(--accent)">
+        <div class="stat-icon">◫</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total Documents</div>
+        <div class="stat-delta neutral" id="stat-total-d">No docs yet</div>
+      </div>
+      <div class="stat-card" style="--accent-c: var(--accent2)">
+        <div class="stat-icon">◈</div>
+        <div class="stat-value" id="stat-scenarios">0</div>
+        <div class="stat-label">Scenarios</div>
+        <div class="stat-delta neutral" id="stat-scenario-d">No scenarios yet</div>
+      </div>
+      <div class="stat-card" style="--accent-c: var(--accent3)">
+        <div class="stat-icon">⬡</div>
+        <div class="stat-value" id="stat-categories">0</div>
+        <div class="stat-label">Categories</div>
+        <div class="stat-delta neutral">File types</div>
+      </div>
+      <div class="stat-card" style="--accent-c: #c457ff">
+        <div class="stat-icon">◇</div>
+        <div class="stat-value" id="stat-size">0 KB</div>
+        <div class="stat-label">Storage Used</div>
+        <div class="stat-delta neutral">Estimated</div>
+      </div>
+    </div>
+
+    <!-- RECENT DOCS -->
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Recent Documents</div>
+          <div class="section-sub">// latest uploads</div>
+        </div>
+        <button class="btn btn-ghost" onclick="navigate('documents', null)">View all →</button>
+      </div>
+      <div class="doc-grid" id="recent-docs-grid">
+        <div class="empty-state" style="grid-column: 1/-1; padding: 32px;">
+          <div class="empty-icon">◫</div>
+          <div class="empty-title">No documents yet</div>
+          <div class="empty-desc">Upload your first document to get started</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT SCENARIOS -->
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Active Scenarios</div>
+          <div class="section-sub">// your workflows</div>
+        </div>
+        <button class="btn btn-ghost" onclick="navigate('scenarios', null)">View all →</button>
+      </div>
+      <div class="scenario-grid" id="recent-scenarios-grid">
+        <div class="empty-state" style="grid-column: 1/-1; padding: 32px;">
+          <div class="empty-icon">◈</div>
+          <div class="empty-title">No scenarios yet</div>
+          <div class="empty-desc">Create a scenario to organize your documents</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENTS PAGE -->
+  <div class="page-view" id="page-documents">
+    <div class="search-bar">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" placeholder="Search documents..." oninput="searchDocs(this.value)" />
+    </div>
+    <div class="filter-row" id="doc-filters">
+      <span class="filter-chip active" onclick="filterDocs('all', this)">All</span>
+      <span class="filter-chip" onclick="filterDocs('PDF', this)">PDF</span>
+      <span class="filter-chip" onclick="filterDocs('Word', this)">Word</span>
+      <span class="filter-chip" onclick="filterDocs('Image', this)">Image</span>
+      <span class="filter-chip" onclick="filterDocs('Excel', this)">Excel</span>
+      <span class="filter-chip" onclick="filterDocs('Other', this)">Other</span>
+    </div>
+    <div class="doc-grid" id="all-docs-grid">
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-icon">◫</div>
+        <div class="empty-title">No documents yet</div>
+        <div class="empty-desc">Head to Upload to add your first document</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS PAGE -->
+  <div class="page-view" id="page-scenarios">
+    <div class="section-header" style="margin-bottom: 24px;">
+      <div>
+        <div class="section-title">All Scenarios</div>
+        <div class="section-sub">// organize documents into workflows</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('scenario-modal')">+ Create Scenario</button>
+    </div>
+    <div class="scenario-grid" id="all-scenarios-grid">
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-icon">◈</div>
+        <div class="empty-title">No scenarios yet</div>
+        <div class="empty-desc">Create your first scenario to link documents together</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD PAGE -->
+  <div class="page-view" id="page-upload">
+    <div class="upload-zone" id="drop-zone" onclick="triggerUpload()">
+      <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.csv" onchange="handleFiles(this.files)" />
+      <div class="upload-icon">⬆</div>
+      <div class="upload-title">Drop files here or click to browse</div>
+      <div class="upload-hint">Supports PDFs, Word, Excel, PowerPoint, Images, and more</div>
+      <div class="upload-types">
+        <span class="type-pill">PDF</span>
+        <span class="type-pill">DOCX</span>
+        <span class="type-pill">XLSX</span>
+        <span class="type-pill">PPTX</span>
+        <span class="type-pill">JPG/PNG</span>
+        <span class="type-pill">TXT</span>
+        <span class="type-pill">CSV</span>
+      </div>
+    </div>
+
+    <div id="upload-queue" style="margin-top: 24px;"></div>
+
+    <div class="section" style="margin-top: 40px;">
+      <div class="section-header">
+        <div class="section-title">Upload Tips</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;">
+        <div class="viewer-info">
+          <div class="viewer-info-label">📁 Organize</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.6;">After uploading, assign documents to scenarios to keep everything organized.</div>
+        </div>
+        <div class="viewer-info">
+          <div class="viewer-info-label">🔍 Search</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.6;">All uploaded documents are instantly searchable from the Documents page.</div>
+        </div>
+        <div class="viewer-info">
+          <div class="viewer-info-label">⚡ Quick View</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.6;">Click any document to open a quick-view panel with metadata and open options.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- DOC VIEWER PANEL -->
+<div class="viewer-panel" id="viewer-panel">
+  <div class="viewer-header">
+    <div>
+      <div class="viewer-title" id="viewer-doc-title">Document</div>
+      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 4px;" id="viewer-doc-type">—</div>
+    </div>
+    <div class="viewer-close" onclick="closeViewer()">✕</div>
+  </div>
+  <div class="viewer-body">
+    <div class="viewer-meta" id="viewer-meta"></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+      <div class="viewer-info">
+        <div class="viewer-info-label">File Size</div>
+        <div class="viewer-info-value" id="viewer-size">—</div>
+      </div>
+      <div class="viewer-info">
+        <div class="viewer-info-label">Uploaded</div>
+        <div class="viewer-info-value" id="viewer-date">—</div>
+      </div>
+      <div class="viewer-info">
+        <div class="viewer-info-label">Type</div>
+        <div class="viewer-info-value" id="viewer-type">—</div>
+      </div>
+      <div class="viewer-info">
+        <div class="viewer-info-label">Category</div>
+        <div class="viewer-info-value" id="viewer-category">—</div>
+      </div>
+    </div>
+    <div class="viewer-info" style="margin-bottom: 16px;">
+      <div class="viewer-info-label">In Scenarios</div>
+      <div id="viewer-scenarios" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11px; color: var(--muted);">—</div>
+    </div>
+    <div class="viewer-preview" id="viewer-preview">
+      Select a document to preview its details here.
+    </div>
+  </div>
+  <div class="viewer-actions">
+    <button class="btn btn-primary" id="viewer-open-btn" onclick="openDocExternal()">↗ Open Document</button>
+    <button class="btn btn-ghost" onclick="downloadDoc()">↓ Download</button>
+    <button class="btn btn-danger" onclick="deleteDoc()">✕ Remove</button>
+  </div>
+</div>
+
+<!-- SCENARIO MODAL -->
+<div class="modal-overlay" id="scenario-modal" onclick="if(event.target===this)closeModal('scenario-modal')">
+  <div class="modal">
+    <div class="modal-title">Create Scenario ◈</div>
+    <div class="modal-sub">// group documents into a workflow or context</div>
+    <div class="form-group">
+      <label class="form-label">Scenario Name</label>
+      <input class="form-input" id="scenario-name" placeholder="e.g. Q4 Report Review, Tax Documents 2024..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="scenario-desc" placeholder="What is this scenario about?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Pick an Icon</label>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span id="icon-0" class="doc-select-item selected" onclick="selectIcon(this, '📂')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">📂</span>
+        <span id="icon-1" class="doc-select-item" onclick="selectIcon(this, '⚡')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">⚡</span>
+        <span id="icon-2" class="doc-select-item" onclick="selectIcon(this, '🔬')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">🔬</span>
+        <span id="icon-3" class="doc-select-item" onclick="selectIcon(this, '💼')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">💼</span>
+        <span id="icon-4" class="doc-select-item" onclick="selectIcon(this, '🏗')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">🏗</span>
+        <span id="icon-5" class="doc-select-item" onclick="selectIcon(this, '📊')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">📊</span>
+        <span id="icon-6" class="doc-select-item" onclick="selectIcon(this, '🧪')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">🧪</span>
+        <span id="icon-7" class="doc-select-item" onclick="selectIcon(this, '🎯')" style="font-size: 24px; cursor: pointer; padding: 8px 12px;">🎯</span>
+      </div>
+    </div>
+    <div class="form-group" id="doc-attach-group">
+      <label class="form-label">Attach Documents</label>
+      <div class="doc-select-grid" id="scenario-doc-picker">
+        <div style="grid-column:1/-1; font-family:var(--font-mono); font-size:11px; color:var(--muted);">Upload documents first to attach them.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('scenario-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveScenario()">Create Scenario →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="dot"></span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────
+let docs = JSON.parse(localStorage.getItem('mh_docs') || '[]');
+let scenarios = JSON.parse(localStorage.getItem('mh_scenarios') || '[]');
+let currentFilter = 'all';
+let searchQuery = '';
+let currentViewDoc = null;
+let selectedScenarioIcon = '📂';
+let selectedScenarioDocs = [];
+
+// ─── PERSISTENCE ─────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('mh_docs', JSON.stringify(docs));
+  localStorage.setItem('mh_scenarios', JSON.stringify(scenarios));
+  updateBadges();
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────────
+function navigate(page, el) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  if (el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  const titles = {
+    dashboard: 'Good day, <span>let\'s work</span> ✦',
+    documents: 'Your <span>Documents</span> ◫',
+    scenarios: 'Your <span>Scenarios</span> ◈',
+    upload: 'Upload <span>Files</span> ⬆'
+  };
+  document.getElementById('page-heading').innerHTML = titles[page];
+
+  if (page === 'documents') renderAllDocs();
+  if (page === 'scenarios') renderAllScenarios();
+  if (page === 'dashboard') renderDashboard();
+}
+
+// ─── UPLOAD ──────────────────────────────────────────────────────────
+function triggerUpload() { document.getElementById('file-input').click(); }
+
+document.getElementById('drop-zone').addEventListener('dragover', e => {
+  e.preventDefault(); e.currentTarget.classList.add('drag-over');
+});
+document.getElementById('drop-zone').addEventListener('dragleave', e => {
+  e.currentTarget.classList.remove('drag-over');
+});
+document.getElementById('drop-zone').addEventListener('drop', e => {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    const doc = {
+      id, name: file.name, size: file.size,
+      type: file.type || 'application/octet-stream',
+      category: getCategory(file.name),
+      date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }),
+      url: URL.createObjectURL(file),
+      scenarios: []
+    };
+    docs.unshift(doc);
+    showUploadProgress(doc);
+  });
+  save();
+  renderDashboard();
+  showToast(`${files.length} file${files.length > 1 ? 's' : ''} uploaded ✦`);
+}
+
+function showUploadProgress(doc) {
+  const q = document.getElementById('upload-queue');
+  const div = document.createElement('div');
+  div.id = 'progress_' + doc.id;
+  div.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;';
+  div.innerHTML = `<span style="font-size:24px;">${getIcon(doc.category)}</span>
+    <div style="flex:1;">
+      <div style="font-family:var(--font-head);font-size:13px;font-weight:600;">${doc.name}</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:4px;">${formatSize(doc.size)}</div>
+      <div class="upload-progress"><div class="upload-progress-bar" style="width:0%" id="bar_${doc.id}"></div></div>
+    </div>
+    <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);" id="pct_${doc.id}">0%</span>`;
+  q.prepend(div);
+  let p = 0;
+  const iv = setInterval(() => {
+    p += Math.random() * 20;
+    if (p >= 100) { p = 100; clearInterval(iv);
+      document.getElementById('pct_' + doc.id).textContent = '✓ Done';
+      document.getElementById('pct_' + doc.id).style.color = 'var(--accent)';
+    }
+    const bar = document.getElementById('bar_' + doc.id);
+    if (bar) bar.style.width = p + '%';
+    const pct = document.getElementById('pct_' + doc.id);
+    if (pct && p < 100) pct.textContent = Math.round(p) + '%';
+  }, 80);
+}
+
+function getCategory(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return 'PDF';
+  if (['doc','docx'].includes(ext)) return 'Word';
+  if (['xls','xlsx','csv'].includes(ext)) return 'Excel';
+  if (['ppt','pptx'].includes(ext)) return 'Slides';
+  if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) return 'Image';
+  if (['txt','md'].includes(ext)) return 'Text';
+  return 'Other';
+}
+
+function getIcon(cat) {
+  const icons = { PDF:'📄', Word:'📝', Excel:'📊', Slides:'📋', Image:'🖼', Text:'📃', Other:'📦' };
+  return icons[cat] || '📦';
+}
+
+function getCategoryColor(cat) {
+  const colors = {
+    PDF: '#ff6b57', Word: '#57c8ff', Excel: '#57ff9a',
+    Slides: '#ff57d8', Image: '#ffb957', Text: '#c8ff57', Other: '#9b57ff'
+  };
+  return colors[cat] || '#6b6b80';
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+// ─── RENDER DOCS ─────────────────────────────────────────────────────
+function makeDocCard(doc) {
+  const color = getCategoryColor(doc.category);
+  return `<div class="doc-card" onclick="openViewer('${doc.id}')">
+    <div class="doc-thumb" style="background:${color}18;">
+      <span style="font-size:40px;">${getIcon(doc.category)}</span>
+    </div>
+    <div class="doc-action">
+      <div class="action-btn" onclick="event.stopPropagation();openDocExternal('${doc.id}')" title="Open">↗</div>
+      <div class="action-btn" onclick="event.stopPropagation();deleteDocById('${doc.id}')" title="Delete">✕</div>
+    </div>
+    <div class="doc-title">${escHtml(doc.name)}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="doc-tag" style="background:${color}18;color:${color};border:1px solid ${color}30;">${doc.category}</span>
+      <span class="doc-meta">${doc.date}</span>
+    </div>
+    ${doc.size ? `<div class="doc-meta">${formatSize(doc.size)}</div>` : ''}
+  </div>`;
+}
+
+function renderDashboard() {
+  // stats
+  document.getElementById('stat-total').textContent = docs.length;
+  document.getElementById('stat-scenarios').textContent = scenarios.length;
+  const cats = [...new Set(docs.map(d => d.category))];
+  document.getElementById('stat-categories').textContent = cats.length;
+  const totalSize = docs.reduce((a,d) => a + (d.size||0), 0);
+  document.getElementById('stat-size').textContent = formatSize(totalSize);
+  document.getElementById('stat-total-d').textContent = docs.length ? `${docs.length} file${docs.length>1?'s':''}` : 'No docs yet';
+  document.getElementById('stat-scenario-d').textContent = scenarios.length ? `${scenarios.length} created` : 'No scenarios yet';
+
+  // recent docs
+  const recentGrid = document.getElementById('recent-docs-grid');
+  const recent = docs.slice(0, 6);
+  recentGrid.innerHTML = recent.length
+    ? recent.map(makeDocCard).join('')
+    : `<div class="empty-state" style="grid-column:1/-1;padding:32px;"><div class="empty-icon">◫</div><div class="empty-title">No documents yet</div><div class="empty-desc">Upload your first document to get started</div></div>`;
+
+  // recent scenarios
+  const scenGrid = document.getElementById('recent-scenarios-grid');
+  const recent2 = scenarios.slice(0, 3);
+  scenGrid.innerHTML = recent2.length
+    ? recent2.map(makeScenCard).join('')
+    : `<div class="empty-state" style="grid-column:1/-1;padding:32px;"><div class="empty-icon">◈</div><div class="empty-title">No scenarios yet</div><div class="empty-desc">Create a scenario to organize your documents</div></div>`;
+}
+
+function renderAllDocs() {
+  const grid = document.getElementById('all-docs-grid');
+  let filtered = docs;
+  if (currentFilter !== 'all') filtered = filtered.filter(d => d.category === currentFilter);
+  if (searchQuery) filtered = filtered.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  grid.innerHTML = filtered.length
+    ? filtered.map(makeDocCard).join('')
+    : `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">◫</div><div class="empty-title">No documents found</div><div class="empty-desc">${docs.length ? 'Try a different filter' : 'Upload some documents first'}</div></div>`;
+}
+
+function filterDocs(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('#doc-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderAllDocs();
+}
+
+function filterByCategory(cat) {
+  navigate('documents', document.querySelectorAll('.nav-item')[1]);
+  currentFilter = cat;
+  document.querySelectorAll('#doc-filters .filter-chip').forEach(c => {
+    c.classList.toggle('active', c.textContent === cat);
+  });
+  renderAllDocs();
+}
+
+function searchDocs(q) { searchQuery = q; renderAllDocs(); }
+
+// ─── SCENARIOS ───────────────────────────────────────────────────────
+function makeScenCard(sc) {
+  const statusClass = { active:'status-active', draft:'status-draft', running:'status-running' }[sc.status] || 'status-draft';
+  const attachedDocs = (sc.docs || []).map(id => docs.find(d => d.id === id)).filter(Boolean);
+  return `<div class="scenario-card" onclick="openScenarioDetail('${sc.id}')">
+    <div class="scenario-header">
+      <div class="scenario-icon">${sc.icon || '📂'}</div>
+      <span class="scenario-status ${statusClass}">${sc.status || 'draft'}</span>
+    </div>
+    <div class="scenario-title">${escHtml(sc.name)}</div>
+    <div class="scenario-desc">${escHtml(sc.desc || 'No description')}</div>
+    <div class="scenario-docs">
+      ${attachedDocs.slice(0,3).map(d => `<span class="pill" style="cursor:pointer;" onclick="event.stopPropagation();openViewer('${d.id}')">${getIcon(d.category)} ${d.name.length > 12 ? d.name.slice(0,12)+'…' : d.name}</span>`).join('')}
+      ${attachedDocs.length > 3 ? `<span class="pill">+${attachedDocs.length-3}</span>` : ''}
+      ${!attachedDocs.length ? '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);">No docs attached</span>' : ''}
+    </div>
+    <div class="scenario-footer">
+      <span class="scenario-date">${sc.date}</span>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:10px;" onclick="event.stopPropagation();deleteScenario('${sc.id}')">Remove</button>
+    </div>
+  </div>`;
+}
+
+function renderAllScenarios() {
+  const grid = document.getElementById('all-scenarios-grid');
+  grid.innerHTML = scenarios.length
+    ? scenarios.map(makeScenCard).join('')
+    : `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">◈</div><div class="empty-title">No scenarios yet</div><div class="empty-desc">Create your first scenario</div></div>`;
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  // populate doc picker
+  const picker = document.getElementById('scenario-doc-picker');
+  selectedScenarioDocs = [];
+  if (!docs.length) {
+    picker.innerHTML = `<div style="grid-column:1/-1;font-family:var(--font-mono);font-size:11px;color:var(--muted);">Upload documents first to attach them.</div>`;
+  } else {
+    picker.innerHTML = docs.map(d => `
+      <div class="doc-select-item" onclick="toggleScenDoc(this,'${d.id}')" data-id="${d.id}">
+        <div class="di">${getIcon(d.category)}</div>
+        <div>${d.name.length > 14 ? d.name.slice(0,14)+'…' : d.name}</div>
+      </div>`).join('');
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function selectIcon(el, icon) {
+  document.querySelectorAll('#scenario-modal .doc-select-item[id^=icon]').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedScenarioIcon = icon;
+}
+
+function toggleScenDoc(el, id) {
+  el.classList.toggle('selected');
+  if (selectedScenarioDocs.includes(id)) {
+    selectedScenarioDocs = selectedScenarioDocs.filter(x => x !== id);
+  } else {
+    selectedScenarioDocs.push(id);
+  }
+}
+
+function saveScenario() {
+  const name = document.getElementById('scenario-name').value.trim();
+  if (!name) { showToast('Please enter a scenario name'); return; }
+  const sc = {
+    id: 'sc_' + Date.now(),
+    name,
+    desc: document.getElementById('scenario-desc').value.trim(),
+    icon: selectedScenarioIcon,
+    docs: [...selectedScenarioDocs],
+    status: 'active',
+    date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+  };
+  scenarios.unshift(sc);
+  // update doc scenario refs
+  sc.docs.forEach(id => {
+    const d = docs.find(x => x.id === id);
+    if (d) { if (!d.scenarios) d.scenarios = []; d.scenarios.push(sc.id); }
+  });
+  save();
+  closeModal('scenario-modal');
+  document.getElementById('scenario-name').value = '';
+  document.getElementById('scenario-desc').value = '';
+  renderDashboard();
+  renderAllScenarios();
+  showToast(`Scenario "${name}" created ◈`);
+  updateBadges();
+}
+
+function deleteScenario(id) {
+  scenarios = scenarios.filter(s => s.id !== id);
+  save(); renderAllScenarios(); renderDashboard();
+  showToast('Scenario removed');
+}
+
+function openScenarioDetail(id) {
+  const sc = scenarios.find(s => s.id === id);
+  if (!sc) return;
+  showToast(`Scenario: ${sc.name} (${sc.docs?.length || 0} docs)`);
+}
+
+// ─── VIEWER ──────────────────────────────────────────────────────────
+function openViewer(id) {
+  const doc = docs.find(d => d.id === id);
+  if (!doc) return;
+  currentViewDoc = doc;
+  document.getElementById('viewer-doc-title').textContent = doc.name;
+  document.getElementById('viewer-doc-type').textContent = doc.type;
+  document.getElementById('viewer-size').textContent = formatSize(doc.size || 0);
+  document.getElementById('viewer-date').textContent = doc.date;
+  document.getElementById('viewer-type').textContent = doc.type.split('/').pop().toUpperCase();
+  document.getElementById('viewer-category').textContent = doc.category;
+
+  // scenarios list
+  const scenDiv = document.getElementById('viewer-scenarios');
+  const scens = scenarios.filter(s => (s.docs||[]).includes(id));
+  scenDiv.innerHTML = scens.length
+    ? scens.map(s => `<span class="pill" style="cursor:pointer;" onclick="openScenarioDetail('${s.id}')">${s.icon} ${s.name}</span>`).join('')
+    : '<span style="color:var(--muted);">Not in any scenario</span>';
+
+  document.getElementById('viewer-preview').textContent =
+    `File: ${doc.name}\nCategory: ${doc.category}\nSize: ${formatSize(doc.size||0)}\nUploaded: ${doc.date}\nType: ${doc.type}\n\nClick "Open Document" to view the full file in a new tab.`;
+
+  const color = getCategoryColor(doc.category);
+  document.getElementById('viewer-meta').innerHTML = `<span class="pill" style="background:${color}18;color:${color};border:1px solid ${color}30;">${getIcon(doc.category)} ${doc.category}</span>`;
+
+  document.getElementById('viewer-panel').classList.add('open');
+}
+
+function closeViewer() {
+  document.getElementById('viewer-panel').classList.remove('open');
+  currentViewDoc = null;
+}
+
+function openDocExternal(id) {
+  const doc = id ? docs.find(d => d.id === id) : currentViewDoc;
+  if (doc?.url) window.open(doc.url, '_blank');
+  else showToast('No URL available for this document');
+}
+
+function downloadDoc() {
+  if (!currentViewDoc?.url) return;
+  const a = document.createElement('a');
+  a.href = currentViewDoc.url; a.download = currentViewDoc.name; a.click();
+}
+
+function deleteDoc() {
+  if (!currentViewDoc) return;
+  deleteDocById(currentViewDoc.id);
+  closeViewer();
+}
+
+function deleteDocById(id) {
+  docs = docs.filter(d => d.id !== id);
+  scenarios.forEach(s => { if (s.docs) s.docs = s.docs.filter(x => x !== id); });
+  save(); renderDashboard(); renderAllDocs();
+  showToast('Document removed');
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────
+function updateBadges() {
+  document.getElementById('doc-count-badge').textContent = docs.length;
+  document.getElementById('scenario-count-badge').textContent = scenarios.length;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+updateBadges();
+renderDashboard();
+</script>
+</body>
+</html>
